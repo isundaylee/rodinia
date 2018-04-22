@@ -1,1 +1,6 @@
-./hotspot 1024 1024 2048 ../../data/hotspot/temp_1024 ../../data/hotspot/power_1024 output.out
+./hotspot 1024 1024 4096 ../../data/hotspot/temp_1024 ../../data/hotspot/power_1024 output.out
+
+if ! diff output.out reference.out >/dev/null 2>&1; then
+    echo "!!!!!!!!!!!!!!!! WRONG ANSWER !!!!!!!!!!!!!!!!"
+    exit 1
+fi
