@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <sys/time.h>
+#include <cilk/cilk.h>
 
 void random_matrix(float *I, int rows, int cols);
 
@@ -21,28 +23,33 @@ void usage(int argc, char **argv)
 	fprintf(stderr, "\t<y2>      - y2 value of the speckle\n");
 	fprintf(stderr, "\t<x1>       - x1 value of the speckle\n");
 	fprintf(stderr, "\t<x2>       - x2 value of the speckle\n");
-	fprintf(stderr, "\t<no. of threads>  - no. of threads\n");
 	fprintf(stderr, "\t<lamda>   - lambda (0,1)\n");
 	fprintf(stderr, "\t<no. of iter>   - number of iterations\n");
 
 	exit(1);
 }
 
+// Returns the current system time in microseconds
+long long get_time()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec * 1000000) + tv.tv_usec;
+
+}
+
 int main(int argc, char* argv[])
 {
 	int rows, cols, size_I, size_R, niter = 10, iter, k;
     float *I, *J, q0sqr, sum, sum2, tmp, meanROI,varROI ;
-	float Jc, G2, L, num, den, qsqr;
 	int *iN,*iS,*jE,*jW;
 	float *dN,*dS,*dW,*dE;
 	int r1, r2, c1, c2;
-	float cN,cS,cW,cE;
-	float *c, D;
+	float *c;
 	float lambda;
 	int i, j;
-    int nthreads;
 
-	if (argc == 10)
+	if (argc == 9)
 	{
 		rows = atoi(argv[1]); //number of rows in the domain
 		cols = atoi(argv[2]); //number of cols in the domain
@@ -54,9 +61,8 @@ int main(int argc, char* argv[])
 		r2   = atoi(argv[4]); //y2 position of the speckle
 		c1   = atoi(argv[5]); //x1 position of the speckle
 		c2   = atoi(argv[6]); //x2 position of the speckle
-		nthreads = atoi(argv[7]); // number of threads
-		lambda = atof(argv[8]); //Lambda value
-		niter = atoi(argv[9]); //number of iterations
+		lambda = atof(argv[7]); //Lambda value
+		niter = atoi(argv[8]); //number of iterations
 	}
     else{
 		usage(argc, argv);
@@ -105,6 +111,8 @@ int main(int argc, char* argv[])
 
 	printf("Start the SRAD main loop\n");
 
+	long long start_time = get_time();
+
 #ifdef ITERATION
 	for (iter=0; iter< niter; iter++){
 #endif
@@ -125,7 +133,10 @@ int main(int argc, char* argv[])
 		omp_set_num_threads(nthreads);
 		#pragma omp parallel for shared(J, dN, dS, dW, dE, c, rows, cols, iN, iS, jW, jE) private(i, j, k, Jc, G2, L, num, den, qsqr)
 #endif
-		for (int i = 0 ; i < rows ; i++) {
+		cilk_for (int i = 0 ; i < rows ; i++) {
+			float num, den, qsqr;
+			float Jc, G2, L;
+
             for (int j = 0; j < cols; j++) {
 
 				k = i * cols + j;
@@ -161,7 +172,10 @@ int main(int argc, char* argv[])
 		omp_set_num_threads(nthreads);
 		#pragma omp parallel for shared(J, c, rows, cols, lambda) private(i, j, k, D, cS, cN, cW, cE)
 #endif
-		for (int i = 0; i < rows; i++) {
+		cilk_for (int i = 0; i < rows; i++) {
+			float D;
+			float cN,cS,cW,cE;
+
             for (int j = 0; j < cols; j++) {
 
                 // current index
@@ -190,6 +204,11 @@ int main(int argc, char* argv[])
 #ifdef ITERATION
 	}
 #endif
+
+
+	long long end_time = get_time();
+
+	printf("Time elapsed: %.3lf\n", (1.0 * (end_time - start_time)) / (1000 * 1000));
 
 
 #ifdef OUTPUT
