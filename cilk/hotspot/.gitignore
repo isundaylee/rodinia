@@ -2,3 +2,4 @@ output.out
 hotspot
 sandbox
 dots
+*.ll

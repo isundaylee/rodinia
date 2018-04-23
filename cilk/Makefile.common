@@ -1,0 +1,6 @@
+CC ?= clang
+CC_FLAGS ?= -g -O3 -ftapir=cilk -lm -ldl
+
+ifdef RHINO
+  CC_FLAGS += -frhino -mllvm -polly
+endif

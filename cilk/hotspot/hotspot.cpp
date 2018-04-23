@@ -64,7 +64,7 @@ void single_iteration(FLOAT *result, FLOAT *temp, FLOAT *power, int row, int col
 
         if ( r_start == 0 || c_start == 0 || r_end == row || c_end == col )
         {
-            cilk_for ( int r = r_start; r < r_start + BLOCK_SIZE_R; ++r ) {
+            for ( int r = r_start; r < r_start + BLOCK_SIZE_R; ++r ) {
                 for ( int c = c_start; c < c_start + BLOCK_SIZE_C; ++c ) {
                     /* Corner 1 */
                     if ( (r == 0) && (c == 0) ) {
@@ -121,7 +121,7 @@ void single_iteration(FLOAT *result, FLOAT *temp, FLOAT *power, int row, int col
             continue;
         }
 
-        cilk_for ( int r = r_start; r < r_start + BLOCK_SIZE_R; ++r ) {
+        for ( int r = r_start; r < r_start + BLOCK_SIZE_R; ++r ) {
             for ( int c = c_start; c < c_start + BLOCK_SIZE_C; ++c ) {
             /* Update Temperatures */
                 result[r*col+c] =temp[r*col+c]+

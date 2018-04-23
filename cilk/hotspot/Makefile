@@ -1,8 +1,4 @@
-# C compiler
-CC ?= clang
-CC_FLAGS ?= -g -O3 -ftapir=cilk
-
-CC_FLAGS += -frhino -mllvm -polly
+include ../Makefile.common
 
 all: hotspot
 
